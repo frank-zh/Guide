@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>1. Consul as Service Discovery within APISIX &mdash; How-To Guides 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> How-To Guides
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Consul as Service Discovery within APISIX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">1.1. Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-up-an-apisix-instance-with-consul">1.2. Set up an APISIX Instance with Consul</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#register-services-to-consul">1.3. Register Services to Consul</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configure-routes-for-consul">1.4. Configure routes for Consul</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">How-To Guides</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>Consul as Service Discovery within APISIX</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="consul-as-service-discovery-within-apisix">
+<h1><span class="section-number">1. </span>Consul as Service Discovery within APISIX<a class="headerlink" href="#consul-as-service-discovery-within-apisix" title="Permalink to this headline">¶</a></h1>
+<p>In a microservices architectures, the set of active service instances changes frequently across a large, dynamic environment. This can lead to a high maintenance cost if the upstream service information are managed with a gateway by manual configuration. Therefore an API Gateway with service discovery integration is necessary for dynamically routing requests to the appropriate services.</p>
+<p>HashiCorp Consul is a popular open source service networking solution that automates network configurations and discovers services.</p>
+<p>APISIX supports to integrate with HashiCorp Consul to help discover, track, and monitor the health of services within a network.</p>
+<img alt="_images/service_discovery.PNG" src="_images/service_discovery.PNG" />
+<p>This guide will show you how to configure Consul as the service discovery of APISIX, which mainly covers the following parts:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pres"><span class="std std-ref">Prerequisites</span></a></p></li>
+<li><p><a class="reference internal" href="#consul"><span class="std std-ref">Set up an APISIX Instance with Consul</span></a></p></li>
+<li><p><a class="reference internal" href="#register"><span class="std std-ref">Register Services to Consul</span></a></p></li>
+<li><p><a class="reference internal" href="#route"><span class="std std-ref">Configure routes for Consul</span></a></p></li>
+</ul>
+<div class="section" id="prerequisites">
+<span id="pres"></span><h2><span class="section-number">1.1. </span>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Install <a class="reference external" href="https://docs.docker.com/get-docker/">Docker</a> .</p></li>
+<li><p>Complete <a class="reference external" href="https://docs.api7.ai/apisix/getting-started/">Get APISIX</a> to install APISIX and containerized etcd.</p></li>
+<li><p>Install <a class="reference external" href="https://developer.hashicorp.com/consul/tutorials/day-0/docker-container-agents">Consul with docker</a> and start a consul agent in the development mode (for demo only).</p></li>
+<li><p>Install <a class="reference external" href="https://curl.se/">cURL</a> to send requests to the services for validation.</p></li>
+</ul>
+</div>
+<div class="section" id="set-up-an-apisix-instance-with-consul">
+<span id="consul"></span><h2><span class="section-number">1.2. </span>Set up an APISIX Instance with Consul<a class="headerlink" href="#set-up-an-apisix-instance-with-consul" title="Permalink to this headline">¶</a></h2>
+<p>This section describes how to set up the APISIX configurations to configure Consul as the service discovery mechanism.</p>
+<ol class="arabic simple">
+<li><p>Edit the Apache APISIX configuration file <code class="docutils literal notranslate"><span class="pre">apisix_conf/config.yaml</span></code> and add the following Consul information.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">discovery</span><span class="p">:</span>
+    <span class="n">consul</span><span class="p">:</span>
+       <span class="n">servers</span><span class="p">:</span>
+         <span class="o">-</span> <span class="s2">&quot;http://172.17.0.2:8500&quot;</span>     <span class="c1"># Replace with the real address of consul.</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<div class="line-block">
+<div class="line">Keep the port as 8500 here because 8500 is the reuqired port for Consul to perform the HTTP API operation.</div>
+</div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Restart APISIX for the configuration changes to take effect.</p></li>
+</ol>
+</div>
+<div class="section" id="register-services-to-consul">
+<span id="register"></span><h2><span class="section-number">1.3. </span>Register Services to Consul<a class="headerlink" href="#register-services-to-consul" title="Permalink to this headline">¶</a></h2>
+<p>This section describes how to register the upstream services of your interests into Consul using the API.</p>
+<ol class="arabic simple">
+<li><p>Make an HTTP API request to register services into Consul.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">X</span> <span class="n">PUT</span> <span class="s1">&#39;http://172.17.0.2:8500/v1/agent/service/register&#39;</span> \
+<span class="o">-</span><span class="n">d</span> <span class="s1">&#39;{</span>
+  <span class="s2">&quot;ID&quot;</span><span class="p">:</span> <span class="s2">&quot;service_web1&quot;</span><span class="p">,</span>        <span class="c1"># specify a unique ID for the service</span>
+  <span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;service_1&quot;</span><span class="p">,</span>         <span class="c1"># Specify a logical name for the service</span>
+  <span class="s2">&quot;Tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span> <span class="s2">&quot;v1&quot;</span><span class="p">],</span>   <span class="c1"># Specifies a list of tags to assign to the service</span>
+  <span class="s2">&quot;Address&quot;</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>     <span class="c1"># Specifies the address of the service</span>
+  <span class="s2">&quot;Port&quot;</span><span class="p">:</span> <span class="mi">9081</span>                 <span class="c1"># Specifies the port of the service</span>
+<span class="p">}</span><span class="s1">&#39;</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<div class="line-block">
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">127.0.0.1:8500</span></code> is the IP address and port of the Consul agent. Please replace it with your actual address.</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">v1/agent/service/register</span></code> is the API endpoint used to register services via HTTP API. For more information, <a class="reference external" href="https://developer.hashicorp.com/consul/docs/services/usage/register-services-checks">Register Services</a> for details.</div>
+</div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Check whether the service is registered successful with the following command:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> \
+  <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">127.0.0.1</span><span class="p">:</span><span class="mi">8500</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">agent</span><span class="o">/</span><span class="n">services</span>
+</pre></div>
+</div>
+<p>The registered services will be returned if they are registered successfully.</p>
+</div>
+<div class="section" id="configure-routes-for-consul">
+<span id="route"></span><h2><span class="section-number">1.4. </span>Configure routes for Consul<a class="headerlink" href="#configure-routes-for-consul" title="Permalink to this headline">¶</a></h2>
+<p>This section describes how to configure a route for Consul so that the requests with the specified format will be routed to the specified upstream services.</p>
+<ol class="arabic simple">
+<li><p>Add Consul to the route using the <a class="reference external" href="https://apisix.apache.org/docs/apisix/admin-api/">Admin API</a> provided by Apache APISIX. <code class="docutils literal notranslate"><span class="pre">X-API-KEY</span></code> is Admin API access token that be found in the APISIX configuration file <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">127.0.0.1</span><span class="p">:</span><span class="mi">9180</span><span class="o">/</span><span class="n">apisix</span><span class="o">/</span><span class="n">admin</span><span class="o">/</span><span class="n">routes</span><span class="o">/</span><span class="mi">1</span> <span class="o">-</span><span class="n">H</span> <span class="s1">&#39;X-API-KEY: edd1c9f034335f136f87ad84b625c8f1&#39;</span> <span class="o">-</span><span class="n">X</span> <span class="n">POST</span> <span class="o">-</span><span class="n">i</span> <span class="o">-</span><span class="n">d</span> <span class="s1">&#39;</span>
+<span class="p">{</span>
+    <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="s2">&quot;/consul&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;upstream&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;service_name&quot;</span><span class="p">:</span> <span class="s2">&quot;service_web1&quot;</span><span class="p">,</span>  <span class="c1"># the name of the services that the request will be forwarded to</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;roundrobin&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;discovery_type&quot;</span><span class="p">:</span> <span class="s2">&quot;consul&quot;</span>    <span class="c1"># must be consul</span>
+    <span class="p">}</span>
+<span class="p">}</span><span class="s1">&#39;</span>
+</pre></div>
+</div>
+<p>In this sample route, the request with URL <code class="docutils literal notranslate"><span class="pre">/consul</span></code> is routed to <code class="docutils literal notranslate"><span class="pre">service_web1</span></code> service.</p>
+<p>If a route is created sucessfully, the following message is returned.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span> <span class="mi">201</span> <span class="n">Created</span>
+<span class="n">Date</span><span class="p">:</span> <span class="n">Wed</span><span class="p">,</span> <span class="mi">07</span> <span class="n">Jun</span> <span class="mi">2023</span> <span class="mi">01</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mi">16</span> <span class="n">GMT</span>
+<span class="n">Content</span><span class="o">-</span><span class="n">Type</span><span class="p">:</span> <span class="n">application</span><span class="o">/</span><span class="n">json</span>
+<span class="n">Transfer</span><span class="o">-</span><span class="n">Encoding</span><span class="p">:</span> <span class="n">chunked</span>
+<span class="n">Connection</span><span class="p">:</span> <span class="n">keep</span><span class="o">-</span><span class="n">alive</span>
+<span class="n">Server</span><span class="p">:</span> <span class="n">APISIX</span><span class="o">/</span><span class="mf">3.3.0</span>
+<span class="n">Access</span><span class="o">-</span><span class="n">Control</span><span class="o">-</span><span class="n">Allow</span><span class="o">-</span><span class="n">Origin</span><span class="p">:</span> <span class="o">*</span>
+<span class="n">Access</span><span class="o">-</span><span class="n">Control</span><span class="o">-</span><span class="n">Allow</span><span class="o">-</span><span class="n">Credentials</span><span class="p">:</span> <span class="n">true</span>
+<span class="n">Access</span><span class="o">-</span><span class="n">Control</span><span class="o">-</span><span class="n">Expose</span><span class="o">-</span><span class="n">Headers</span><span class="p">:</span> <span class="o">*</span>
+<span class="n">Access</span><span class="o">-</span><span class="n">Control</span><span class="o">-</span><span class="n">Max</span><span class="o">-</span><span class="n">Age</span><span class="p">:</span> <span class="mi">3600</span>
+<span class="n">X</span><span class="o">-</span><span class="n">API</span><span class="o">-</span><span class="n">VERSION</span><span class="p">:</span> <span class="n">v3</span>
+
+<span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span><span class="s2">&quot;/apisix/routes/1&quot;</span><span class="p">,</span><span class="s2">&quot;value&quot;</span><span class="p">:{</span><span class="s2">&quot;priority&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;upstream&quot;</span><span class="p">:{</span><span class="s2">&quot;service_name&quot;</span><span class="p">:</span><span class="s2">&quot;service_1&quot;</span><span class="p">,</span><span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;roundrobin&quot;</span><span class="p">,</span><span class="s2">&quot;scheme&quot;</span><span class="p">:</span><span class="s2">&quot;http&quot;</span><span class="p">,</span><span class="s2">&quot;pass_host&quot;</span><span class="p">:</span><span class="s2">&quot;pass&quot;</span><span class="p">,</span><span class="s2">&quot;discovery_type&quot;</span><span class="p">:</span><span class="s2">&quot;consul&quot;</span><span class="p">,</span><span class="s2">&quot;hash_on&quot;</span><span class="p">:</span><span class="s2">&quot;vars&quot;</span><span class="p">},</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span><span class="s2">&quot;/consul/*&quot;</span><span class="p">,</span><span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="s2">&quot;create_time&quot;</span><span class="p">:</span><span class="mi">1686102854</span><span class="p">,</span><span class="s2">&quot;update_time&quot;</span><span class="p">:</span><span class="mi">1686102854</span><span class="p">}}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Make a HTTP request to APISIX with <code class="docutils literal notranslate"><span class="pre">/consul</span></code> to validate the results.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">127.0.0.1</span><span class="p">:</span><span class="mi">9080</span><span class="o">/</span><span class="n">consul</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="index.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Frank.Z.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
